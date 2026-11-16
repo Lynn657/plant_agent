@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>PlantAgent · 软件建模工作台</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-mark" aria-hidden="true">
+        <span></span><span></span><span></span>
+      </div>
+      <div>
+        <strong>PlantAgent</strong>
+        <small>Agentic Diagram Studio</small>
+      </div>
+    </div>
+    <nav class="topnav" aria-label="主导航">
+      <button class="nav-item active">绘图工作台</button>
+      <button class="nav-item" id="historyJump">项目历史</button>
+    </nav>
+    <div class="top-status">
+      <span class="status-dot" id="statusDot"></span>
+      <span id="modelStatus">正在连接...</span>
+      <button class="icon-button" id="refreshStatus" title="刷新状态" aria-label="刷新状态">↻</button>
+    </div>
+  </header>
+
+  <main class="workspace">
+    <aside class="left-panel">
+      <section class="composer">
+        <div class="section-eyebrow">NEW DIAGRAM</div>
+        <h1>把题目变成清晰的结构</h1>
+        <p class="muted">描述业务场景、系统需求或设计模式。代理会选择图种、建模并自检。</p>
+        <label class="field-label" for="prompt">题目信息</label>
+        <textarea id="prompt" rows="7" placeholder="例如：为在线商城设计订单模块类图。客户可提交和取消订单，订单包含多个商品项，支付成功后才能发货……"></textarea>
+        <div class="form-row">
+          <label>
+            <span class="field-label">图表类型</span>
+            <select id="kind">
+              <option value="auto">自动判断</option>
+              <option value="class">类图 / 设计模式</option>
+              <option value="sequence">时序图</option>
+              <option value="usecase">用例图</option>
+              <option value="activity">活动图</option>
+              <option value="state">状态图</option>
+              <option value="er">ER 图</option>
+              <option value="component">组件图</option>
+              <option value="deployment">部署图</option>
+              <option value="dfd">数据流图</option>
+              <option value="flow">流程图</option>
+            </select>
+          </label>
+          <label>
+            <span class="field-label">视觉主题</span>
+            <select id="theme">
+              <option value="ocean">工程蓝</option>
+              <option value="paper">纸张暖色</option>
+              <option value="dark">深色展示</option>
+            </select>
+          </label>
+        </div>
+        <div class="mode-hint" id="modeHint">
+          <span class="spark">✦</span>
+          <span id="modeHintText">首次生成会创建新会话</span>
+        </div>
+        <button class="primary-button" id="generateButton">
+          <span class="button-label">生成图表</span>
+          <span class="button-shortcut">Ctrl ↵</span>
+        </button>
+      </section>
+
+      <section class="examples">
+        <div class="section-head">
+          <span class="section-eyebrow">QUICK START</span>
+          <button class="text-button" id="newSession">新会话</button>
+        </div>
+        <div class="example-grid">
+          <button class="example-card" data-kind="class" data-prompt="画出观察者模式类图，包含 Subject、ConcreteSubject、Observer 和 ConcreteObserver，并标出主要方法。">
+            <span class="example-icon">◈</span><span>观察者模式</span><small>GoF 类图</small>
+          </button>
+          <button class="example-card" data-kind="sequence" data-prompt="设计用户登录系统的时序图：用户提交账号密码，客户端调用认证服务，认证服务查询用户库并写入会话，最后返回令牌。">
+            <span class="example-icon">⇢</span><span>登录交互</span><small>时序图</small>
+          </button>
+          <button class="example-card" data-kind="usecase" data-prompt="为高校图书管理系统画用例图，参与者有学生、教师、图书管理员，功能包括登录、查询图书、借阅图书、归还图书和管理图书。">
+            <span class="example-icon">◎</span><span>图书管理</span><small>用例图</small>
+          </button>
+          <button class="example-card" data-kind="er" data-prompt="设计学生选课系统 ER 图，包含学生、课程和选课记录，记录成绩，并标出主外键和基数关系。">
+            <span class="example-icon">▤</span><span>学生选课</span><small>ER 图</small>
+          </button>
+        </div>
+      </section>
+
+      <section class="history-section" id="historySection">
+        <div class="section-head">
+          <span class="section-eyebrow">RECENT</span>
+          <span class="history-count" id="historyCount">0</span>
+        </div>
+        <div class="history-list" id="historyList">
+          <p class="empty-small">还没有生成记录</p>
+        </div>
+      </section>
+    </aside>
+
+    <section class="canvas-panel">
+      <div class="canvas-toolbar">
+        <div class="canvas-title">
+          <span class="canvas-kicker">CANVAS</span>
+          <strong id="diagramTitle">等待创建图表</strong>
+        </div>
+        <div class="tabs" role="tablist">
+          <button class="tab active" data-tab="preview">画布</button>
+          <button class="tab" data-tab="mermaid">Mermaid</button>
+          <button class="tab" data-tab="spec">规格 JSON</button>
+        </div>
+        <div class="toolbar-actions">
+          <div class="zoom-controls">
+            <button class="icon-button" id="zoomOut" aria-label="缩小">−</button>
+            <span id="zoomValue">100%</span>
+            <button class="icon-button" id="zoomIn" aria-label="放大">+</button>
+          </div>
+          <button class="secondary-button" id="copyButton" disabled>复制</button>
+          <div class="download-wrap">
+            <button class="secondary-button" id="downloadButton" disabled>导出</button>
+            <div class="download-menu" id="downloadMenu">
+              <button data-format="svg">下载 SVG</button>
+              <button data-format="png">下载 PNG</button>
+              <button data-format="mmd">下载 Mermaid</button>
+              <button data-format="json">下载规格 JSON</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="canvas-stage" id="canvasStage">
+        <div class="empty-canvas" id="emptyCanvas">
+          <div class="empty-visual" aria-hidden="true">
+            <div class="diagram-node node-a">用例</div>
+            <div class="diagram-node node-b">类</div>
+            <div class="diagram-node node-c">时序</div>
+            <svg viewBox="0 0 360 240">
+              <path d="M82 72 C145 72 145 148 210 148" class="connector"/>
+              <path d="M218 145 C270 125 280 92 310 76" class="connector"/>
+              <circle cx="82" cy="72" r="4" class="connector-dot"/>
+              <circle cx="310" cy="76" r="4" class="connector-dot"/>
+            </svg>
+          </div>
+          <h2>从一句话开始建模</h2>
+          <p>输入需求后，代理会规划、加载知识、生成 SVG，并做一次结构自检。</p>
+          <div class="capability-row">
+            <span>10 类图表</span><span>设计模式</span><span>MCP 工具</span>
+          </div>
+        </div>
+        <div class="loading-state hidden" id="loadingState">
+          <div class="loader-orbit"><span></span></div>
+          <strong id="loadingTitle">正在理解题目...</strong>
+          <p id="loadingDetail">代理会先规划，再调用绘图与校验工具</p>
+          <div class="loading-shimmer"></div>
+        </div>
+        <div class="diagram-viewport hidden" id="diagramViewport">
+          <div class="diagram-paper" id="diagramPaper"></div>
+        </div>
+        <div class="code-view hidden" id="codeView">
+          <div class="code-head"><span id="codeLabel">Mermaid</span><button class="text-button" id="copyCode">复制代码</button></div>
+          <pre><code id="codeContent"></code></pre>
+        </div>
+      </div>
+      <div class="canvas-footer">
+        <span id="footerInfo">SVG 本地渲染 · 不依赖外部 CDN</span>
+        <span id="warningInfo"></span>
+      </div>
+    </section>
+
+    <aside class="right-panel">
+      <section class="agent-card">
+        <div class="section-head">
+          <div>
+            <span class="section-eyebrow">AGENT RUN</span>
+            <h3>执行轨迹</h3>
+          </div>
+          <span class="live-badge" id="liveBadge">IDLE</span>
+        </div>
+        <div class="summary-box hidden" id="summaryBox">
+          <div class="summary-label">代理说明</div>
+          <p id="summaryText"></p>
+        </div>
+        <div class="trace-list" id="traceList">
+          <div class="trace-empty">
+            <span class="trace-glyph">⌁</span>
+            <p>生成后，这里会展示计划、工具调用与校验结果。</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="plan-card">
+        <div class="section-head">
+          <span class="section-eyebrow">PLAN</span>
+          <span class="plan-progress" id="planProgress">0 / 0</span>
+        </div>
+        <div class="plan-list" id="planList"><p class="empty-small">暂无步骤</p></div>
+      </section>
+
+      <section class="capabilities-card">
+        <span class="section-eyebrow">RUNTIME</span>
+        <div class="capability-line">
+          <span>技能</span>
+          <strong id="skillCount">0</strong>
+        </div>
+        <div class="capability-line">
+          <span>MCP servers</span>
+          <strong id="mcpCount">0</strong>
+        </div>
+        <div class="capability-line">
+          <span>输出格式</span>
+          <strong>SVG + Mermaid</strong>
+        </div>
+        <div class="skill-chips" id="skillChips"></div>
+      </section>
+    </aside>
+  </main>
+
+  <div class="toast" id="toast" role="status"></div>
+  <script src="/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,2 @@
+# PlantAgent uses only the Python standard library.
+# Optional: no third-party packages are required.

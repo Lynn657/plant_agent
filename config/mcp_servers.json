@@ -1,0 +1,29 @@
+{
+  "mcpServers": {
+    "uml-lint": {
+      "description": "本地 UML 结构校验与建模规范检查",
+      "enabled": true,
+      "command": "${PYTHON}",
+      "args": [
+        "${APP_ROOT}/mcp_servers/uml_lint_server.py"
+      ],
+      "policy": {
+        "*": "deny",
+        "validate_spec": "allow",
+        "conventions": "allow"
+      }
+    },
+    "external-example": {
+      "description": "外部 MCP server 配置示例（默认禁用）",
+      "enabled": false,
+      "command": "npx",
+      "args": [
+        "-y",
+        "your-mcp-server-package"
+      ],
+      "policy": {
+        "*": "confirm"
+      }
+    }
+  }
+}
